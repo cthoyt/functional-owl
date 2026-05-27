@@ -33,13 +33,20 @@
     -->
 </p>
 
-An implementation of the Functional OWL (OFN) object model.
+An implementation of the
+[Functional OWL (OFN)](https://www.w3.org/TR/owl2-syntax/) object model.
+
+This code was originally part of [PyOBO](https://github.com/biopragmatics/pyobo)
+but split out for more reusability. Partially inspired by
+https://github.com/Harold-Solbrig/funowl.
 
 ## 💪 Getting Started
 
-> TODO show in a very small amount of space the **MOST** useful thing your
-> package can do. Make it as short as possible! You have an entire set of docs
-> for later.
+```python-console
+>>> from functional_owl import RelationshipMacro
+>>> RelationshipMacro("hgnc:16793", "RO:0002160", "NCBITaxon:9606").to_funowl()
+'SubClassOf(hgnc:16793 ObjectSomeValuesFrom(RO:0002160 NCBITaxon:9606))'
+```
 
 ## 🚀 Installation
 
