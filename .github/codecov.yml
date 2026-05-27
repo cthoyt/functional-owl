@@ -1,0 +1,4 @@
+# see https://docs.codecov.com/v4.6/docs/codecov-yaml
+ignore:
+  - "src/functional_owl/__main__.py"
+  - "src/functional_owl/cli.py"
