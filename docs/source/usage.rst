@@ -2,4 +2,4 @@
  Usage
 #######
 
-.. automodapi:: functional_owl.api
+.. automodapi:: functional_owl
