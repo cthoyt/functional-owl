@@ -237,7 +237,7 @@ def _safe_primitive_box(value: PrimitiveHint) -> PrimitiveBox:
     if isinstance(value, PrimitiveBox):
         return value
     # note that literal is also a subclass of str,
-    # so it needs to be cheked first
+    # so it needs to be checked first
     if isinstance(value, term.Literal):
         return LiteralBox(value)
     # note that we decided that strings should be parsed
@@ -288,14 +288,14 @@ def _make_sequence_nodes(
 def _yield_connector_nodes(
     graph: Graph, start: term.IdentifiedNode
 ) -> Iterable[term.IdentifiedNode]:
-    """Yield all of the nodes representing parts of a collection.
+    """Yield the nodes representing parts of a collection.
 
-    This is different than simply doing :meth:`rdflib.graph.items`,
+    This is different from simply doing :meth:`rdflib.graph.items`,
     because that function gets the "first" parts - this function
     gets the blank nodes that are representing the prongs in the
     list itself.
 
-    We have to do this because ROBOT implemenents RDF conversion for
+    We have to do this because ROBOT implements RDF conversion for
     :class:`DataOneOf` strangely, where each blank node in the collection
     gets a triple typing it as a list ``<bnode> rdf:type rdfs:List``
     """
@@ -403,7 +403,7 @@ class ObjectInverseOf(ObjectPropertyExpression):
         # note that this can't be an expression - it has to be a defined thing.
         # further, we can't use SimpleObjectPropertyExpression because
         # we're trying to stay consistent with OWLAPI, and it sometimes doesn't
-        # automatically assert the enclosed property as a owl:ObjectProperty,
+        # automatically assert the enclosed property as a ``owl:ObjectProperty``,
         # e.g., inside ObjectMaxCardinality (not) and inside SubjectPropertyOf (does)
         # see https://github.com/owlcs/owlapi/issues/1161
         self.object_property = IdentifierBox(object_property)
@@ -834,7 +834,7 @@ def get_owl_restriction(
         Can be one of ``owl:someValuesFrom``, ``owl:allValuesFrom``,
         ``owl:hasValue``, ``owl:hasSelf``, or something more exotic
     :param restriction_target: The target reference or literal
-    :param converter: The a converter for CURIEs to URIs
+    :param converter: a converter for CURIEs to URIs
     :return: A blank node representing an OWL restriction
     """
     node = term.BNode()
@@ -1366,7 +1366,7 @@ class DisjointClasses(ClassAxiom):
         *,
         annotations: Annotations | None = None,
     ) -> None:
-        """Initialize a disjoint classes axiom."""
+        """Initialize a disjoint class axiom."""
         if len(class_expressions) < 2:
             raise ValueError
         self.class_expressions = [ClassExpression.safe(ce) for ce in class_expressions]
@@ -1648,7 +1648,7 @@ class _ObjectPropertyTyping(ObjectPropertyAxiom):  # 9.2.4
         *,
         annotations: Annotations | None = None,
     ) -> None:
-        """Initialize a object property domain or range."""
+        """Initialize an object property domain or range."""
         self.object_property_expression = ObjectPropertyExpression.safe(left)
         self.value = ClassExpression.safe(right)
         super().__init__(annotations)
@@ -1748,7 +1748,7 @@ class FunctionalObjectProperty(_UnaryObjectProperty):  # 9.2.7
     >>> SameIndividual(["a:Peter", "a:Peter_Griffin"])
 
     One might expect the previous ontology to be inconsistent, since
-    the a:hasFather property points to two different values for
+    the ``a:hasFather`` property points to two different values for
     ``a:Stewie``. OWL 2, however, does not make the unique name assumption,
     so ``a:Peter`` and ``a:Peter_Griffin`` are not necessarily distinct individuals.
     If the ontology were extended with the following assertion, then it
