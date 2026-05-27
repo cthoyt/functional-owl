@@ -1,4 +1,4 @@
-"""Functional OWL interface."""
+"""An implementation of the Functional OWL (OFN) object model."""
 
 from .dsl import (
     Annotation,
@@ -80,9 +80,21 @@ from .dsl import (
     SymmetricObjectProperty,
     TransitiveObjectProperty,
 )
+from .macros import (
+    AltMacro,
+    DescriptionMacro,
+    IsAnonymousMacro,
+    IsObsoleteMacro,
+    LabelMacro,
+    MappingMacro,
+    RelationshipMacro,
+    SynonymMacro,
+    XrefMacro,
+)
 from .ontology import Document, Import, Ontology, Prefix, write_ontology
 
 __all__ = [
+    "AltMacro",
     "Annotation",
     "AnnotationAssertion",
     "AnnotationAxiom",
@@ -118,6 +130,7 @@ __all__ = [
     "DatatypeRestriction",
     "Declaration",
     "DeclarationType",
+    "DescriptionMacro",
     "DifferentIndividuals",
     "DisjointClasses",
     "DisjointDataProperties",
@@ -134,6 +147,10 @@ __all__ = [
     "InverseFunctionalObjectProperty",
     "InverseObjectProperties",
     "IrreflexiveObjectProperty",
+    "IsAnonymousMacro",
+    "IsObsoleteMacro",
+    "LabelMacro",
+    "MappingMacro",
     "NegativeDataPropertyAssertion",
     "NegativeObjectPropertyAssertion",
     "ObjectAllValuesFrom",
@@ -157,6 +174,7 @@ __all__ = [
     "Ontology",
     "Prefix",
     "ReflexiveObjectProperty",
+    "RelationshipMacro",
     "SameIndividual",
     "SubAnnotationPropertyOf",
     "SubClassOf",
@@ -164,6 +182,8 @@ __all__ = [
     "SubObjectPropertyExpression",
     "SubObjectPropertyOf",
     "SymmetricObjectProperty",
+    "SynonymMacro",
     "TransitiveObjectProperty",
+    "XrefMacro",
     "write_ontology",
 ]
