@@ -32,7 +32,6 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Typing :: Typed",
-    # TODO add your topics from the Trove controlled vocabulary (see https://pypi.org/classifiers)
 ]
 keywords = [
     "snekpack", # please keep this keyword to credit the cookiecutter-snekpack template
@@ -47,9 +46,10 @@ license-files = ["LICENSE"]
 
 requires-python = ">=3.10"
 dependencies = [
-    "more-itertools", # missing from itertools in stdlib
-    "tqdm", # progress bars
-    "typing-extensions",
+    "curies",
+    "rdflib",
+    "bioregistry",
+    "pystow",
 ]
 
 # see https://peps.python.org/pep-0735/ and https://docs.astral.sh/uv/concepts/dependencies/#dependency-groups
@@ -98,7 +98,8 @@ pyroma = [
 
 # see https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
 [project.optional-dependencies]
-
+standardize = ["bioregistry"]
+oracle = ["robot_obo_tool"]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
 # and also https://packaging.python.org/en/latest/specifications/well-known-project-urls/
@@ -188,7 +189,7 @@ extend-select = [
 ]
 ignore = [
     "D105", # Missing docstring in magic method
-    "E203", # Black conflicts with the following
+    "E501",
 ]
 
 # See https://docs.astral.sh/ruff/settings/#per-file-ignores
