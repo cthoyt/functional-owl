@@ -147,10 +147,13 @@ class Ontology(Box):
 
                 `3.4 "Imports" <https://www.w3.org/TR/owl2-syntax/#Imports>`_
 
-        :param annotations: .. seealso::
+        :param annotations: the ontology annotations
 
-            `3.5 "Ontology Annotations"
-            <https://www.w3.org/TR/owl2-syntax/#Ontology_Annotations>`_
+            .. seealso::
+
+                `3.5 "Ontology Annotations"
+                <https://www.w3.org/TR/owl2-syntax/#Ontology_Annotations>`_
+
         :param axioms: statements about what is true in the domain
 
             .. seealso::
