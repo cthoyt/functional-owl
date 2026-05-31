@@ -11,7 +11,7 @@ from typing import TextIO, TypeAlias
 
 import curies
 from curies import Converter
-from pystow.utils import safe_open, safe_write_text
+from pystow.utils import safe_write_text
 from rdflib import OWL, RDF, Graph, term
 
 from .dsl import Annotation, Annotations, Axiom, Box
@@ -115,8 +115,7 @@ class Document:
 
     def write_funowl(self, path: str | Path | TextIO) -> None:
         """Write functional OWL to a file."""
-        with safe_open(path, operation="write") as file:
-            file.write(self.to_funowl())
+        safe_write_text(self.to_funowl(), path)
 
     def to_funowl(self) -> str:
         """Get the document as a functional OWL string."""
