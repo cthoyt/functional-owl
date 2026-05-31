@@ -6,8 +6,9 @@ import subprocess
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, TypeAlias
 
+import curies
 from curies import Converter
 from pystow.utils import safe_open
 from rdflib import OWL, RDF, Graph, term
@@ -23,16 +24,18 @@ __all__ = [
     "write_ontology",
 ]
 
+PrefixHint: TypeAlias = dict[str, str] | list["Prefix"] | curies.Converter
+
 
 def write_ontology(
     *,
-    prefixes: dict[str, str] | list[Prefix],
+    prefixes: PrefixHint,
     iri: str | None = None,
     version_iri: str | None = None,
     directly_imports_documents: list[Import | str] | None = None,
     annotations: Annotations | None = None,
     axioms: list[Axiom] | None = None,
-    file: TextIO | None = None,
+    file: str | Path | TextIO | None = None,
 ) -> None:
     """Print an ontology serialized as functional OWL."""
     ontology = Ontology(
@@ -43,7 +46,19 @@ def write_ontology(
         axioms=axioms,
     )
     document = Document(ontology, prefixes)
-    print(document.to_funowl(), file=file)
+    with safe_open(file, operation="write") as f:
+        print(document.to_funowl(), file=f)
+
+
+def _handle_prefixes(prefixes: PrefixHint) -> list[Prefix]:
+    if isinstance(prefixes, curies.Converter):
+        prefixes = prefixes.bimap
+    if isinstance(prefixes, dict):
+        return [
+            Prefix(prefix, uri_prefix)
+            for prefix, uri_prefix in sorted(prefixes.items(), key=lambda kv: kv[0].casefold())
+        ]
+    return prefixes
 
 
 class Document:
@@ -55,7 +70,7 @@ class Document:
     def __init__(
         self,
         ontologies: Ontology | list[Ontology],
-        prefixes: dict[str, str] | list[Prefix],
+        prefixes: PrefixHint,
     ) -> None:
         """Initialize a functional OWL document.
 
@@ -73,13 +88,7 @@ class Document:
                 <https://www.w3.org/TR/owl2-syntax/#Functional-Style_Syntax>`_
         """
         self.ontologies = ontologies if isinstance(ontologies, list) else [ontologies]
-        if isinstance(prefixes, dict):
-            self.prefixes = [
-                Prefix(prefix, uri_prefix)
-                for prefix, uri_prefix in sorted(prefixes.items(), key=lambda kv: kv[0].casefold())
-            ]
-        else:
-            self.prefixes = prefixes
+        self.prefixes = _handle_prefixes(prefixes)
 
     @property
     def prefix_map(self) -> dict[str, str]:
