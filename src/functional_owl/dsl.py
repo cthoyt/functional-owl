@@ -1233,6 +1233,9 @@ class Axiom(Box):
     def _funowl_inside_2(self) -> str:
         """Get the inside of the functional OWL tag representing the axiom."""
 
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Axiom) and self.annotations == other.annotations
+
 
 class ClassAxiom(Axiom, ABC):
     """A model for a class axiom."""
@@ -1896,6 +1899,13 @@ class _DataPropertyList(DataPropertyAxiom, ABC):
 
 class EquivalentDataProperties(_DataPropertyList):
     """A data property axiom for `9.3.2 "Equivalent Data Properties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Data_Properties>`_."""
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, EquivalentDataProperties)
+            and self.data_property_expressions == other.data_property_expressions
+            and self.annotations == other.annotations
+        )
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.BNode:
         """Represent the equivalent data properties axiom for RDF."""
