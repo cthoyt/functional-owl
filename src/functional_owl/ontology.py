@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
@@ -10,7 +11,7 @@ from typing import TextIO, TypeAlias
 
 import curies
 from curies import Converter
-from pystow.utils import safe_open
+from pystow.utils import safe_open, safe_write_text
 from rdflib import OWL, RDF, Graph, term
 
 from .dsl import Annotation, Annotations, Axiom, Box
@@ -46,13 +47,12 @@ def write_ontology(
         axioms=axioms,
     )
     document = Document(ontology, prefixes)
-    with safe_open(file, operation="write") as f:
-        print(document.to_funowl(), file=f)
+    safe_write_text(document.to_funowl(), file or sys.stdout)
 
 
 def _handle_prefixes(prefixes: PrefixHint) -> list[Prefix]:
     if isinstance(prefixes, curies.Converter):
-        prefixes = prefixes.bimap
+        prefixes = dict(prefixes.bimap)
     if isinstance(prefixes, dict):
         return [
             Prefix(prefix, uri_prefix)
