@@ -47,7 +47,7 @@ def write_ontology(
         axioms=axioms,
     )
     document = Document(ontology, prefixes)
-    safe_write_text(document.to_funowl(), file or sys.stdout)
+    safe_write_text(document.to_funowl() + "\n", file or sys.stdout)
 
 
 def _handle_prefixes(prefixes: PrefixHint) -> list[Prefix]:
@@ -115,7 +115,7 @@ class Document:
 
     def write_funowl(self, path: str | Path | TextIO) -> None:
         """Write functional OWL to a file."""
-        safe_write_text(self.to_funowl(), path)
+        safe_write_text(self.to_funowl() + "\n", path)
 
     def to_funowl(self) -> str:
         """Get the document as a functional OWL string."""
