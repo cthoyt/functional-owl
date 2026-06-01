@@ -14,7 +14,7 @@ from curies import Converter
 from pystow.utils import safe_write_text
 from rdflib import OWL, RDF, Graph, term
 
-from .dsl import Annotation, Annotations, Axiom, Box
+from .dsl import Annotation, Annotations, Box
 from .utils import EXAMPLE_ONTOLOGY_IRI, FunctionalOWLSerializable, list_to_funowl
 
 __all__ = [
@@ -35,7 +35,7 @@ def write_ontology(
     version_iri: str | None = None,
     directly_imports_documents: list[Import | str] | None = None,
     annotations: Annotations | None = None,
-    axioms: list[Axiom] | None = None,
+    axioms: list[Box] | None = None,
     file: str | Path | TextIO | None = None,
 ) -> None:
     """Print an ontology serialized as functional OWL."""
