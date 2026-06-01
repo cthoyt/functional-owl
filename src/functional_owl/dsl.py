@@ -70,6 +70,7 @@ __all__ = [
     "InverseFunctionalObjectProperty",
     "InverseObjectProperties",
     "IrreflexiveObjectProperty",
+    "LiteralBox",
     "NegativeDataPropertyAssertion",
     "NegativeObjectPropertyAssertion",
     "ObjectAllValuesFrom",
