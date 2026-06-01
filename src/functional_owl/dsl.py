@@ -6,9 +6,9 @@ import datetime
 import importlib.util
 import itertools as itt
 import typing
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
 import curies
 import rdflib.namespace
@@ -106,10 +106,10 @@ SupportedLiterals: TypeAlias = int | float | bool | str | datetime.date | dateti
 
 #: A partial hint for something that can be turned into an :class:`IdentifierBox`.
 #: Here, a string gets interpreted into a CURIE using :meth:`curies.Reference.from_curie`
-IdentifierHint = term.URIRef | curies.Reference | str
+IdentifierHint: TypeAlias = term.URIRef | curies.Reference | str
 
 
-class Box(FunctionalOWLSerializable, RDFNodeSerializable):
+class Box(FunctionalOWLSerializable, RDFNodeSerializable, ABC):
     """A model for objects that can be represented as nodes in RDF and Functional OWL."""
 
 
@@ -152,6 +152,17 @@ class IdentifierBox(Box):
             self.identifier = _upgrade_ref(identifier)
         else:
             raise TypeError(f"can not make an identifier box from: {identifier}")
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, IdentifierBox):
+            return False
+        if isinstance(self.identifier, curies.Reference) and isinstance(
+            other.identifier, curies.Reference
+        ):
+            return self.identifier == other.identifier
+        if isinstance(self.identifier, term.URIRef) and isinstance(other.identifier, term.URIRef):
+            return self.identifier == other.identifier
+        return False
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.Node:
         """Construct a RDF-appropriate representation."""
@@ -351,7 +362,7 @@ Section 6: Property Expressions
 """
 
 
-class ObjectPropertyExpression(Box):
+class ObjectPropertyExpression(Box, ABC):
     """A model representing `6.1 "Object Property Expressions" <https://www.w3.org/TR/owl2-syntax/#Object_Property_Expressions>`_.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/C_objectproperty.gif
@@ -425,7 +436,7 @@ class ObjectInverseOf(ObjectPropertyExpression):
         return self.object_property.to_funowl()
 
 
-class DataPropertyExpression(Box):
+class DataPropertyExpression(Box, ABC):
     """A model representing `6.2 "Data Property Expressions" <https://www.w3.org/TR/owl2-syntax/#Data_Property_Expressions>`_.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/C_dataproperty.gif
@@ -460,7 +471,7 @@ Section 7: Data Ranges
 """
 
 
-class DataRange(Box):
+class DataRange(Box, ABC):
     """A model representing `7 "Data Ranges" <https://www.w3.org/TR/owl2-syntax/#Datatypes>`_.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/C_datarange.gif
@@ -525,7 +536,7 @@ class DataUnionOf(_ListDataRange):
 
 
 class DataComplementOf(DataRange):
-    """A data range defined in `7.3 Complement of Data Ranges" <https://www.w3.org/TR/owl2-syntax/#Complement_of_Data_Ranges>`_.
+    """A data range defined in `7.3 Complement of Data Ranges <https://www.w3.org/TR/owl2-syntax/#Complement_of_Data_Ranges>`_.
 
     The following complement data range contains literals that are not positive integers:
 
@@ -557,7 +568,7 @@ class DataComplementOf(DataRange):
 
 
 class DataOneOf(DataRange):
-    """A data range defined in `7.4 Enumeration of Literals" <https://www.w3.org/TR/owl2-syntax/#Enumeration_of_Literals>`_.
+    """A data range defined in `7.4 Enumeration of Literals <https://www.w3.org/TR/owl2-syntax/#Enumeration_of_Literals>`_.
 
     The following data range contains exactly two literals: the string "Peter" and the integer one.
 
@@ -648,7 +659,7 @@ class DatatypeRestriction(DataRange):
 """
 
 
-class ClassExpression(Box):
+class ClassExpression(Box, ABC):
     """An abstract model representing `class expressions <https://www.w3.org/TR/owl2-syntax/#Class_Expressions>`_."""
 
     @classmethod
@@ -1088,9 +1099,9 @@ class _DataValuesFrom(ClassExpression):
         """Represent the data values existential quantification for RDF."""
         node = term.BNode()
         graph.add((node, RDF.type, OWL.Restriction))
-        p_o = _get_data_value_po(graph, converter, self.data_property_expressions)
+        predicate, obj = _get_data_value_po(graph, converter, self.data_property_expressions)
         graph.add((node, self.property_type, self.data_range.to_rdflib_node(graph, converter)))
-        graph.add((node, *p_o))
+        graph.add((node, predicate, obj))
         return node
 
     def to_funowl_args(self) -> str:
@@ -1120,7 +1131,7 @@ class DataAllValuesFrom(_DataValuesFrom):
     property_type: ClassVar[term.URIRef] = OWL.allValuesFrom
 
 
-class DataHasValue(_DataValuesFrom):
+class DataHasValue(ClassExpression):
     """A class expression defined in `8.4.3 Literal Value Restriction <https://www.w3.org/TR/owl2-syntax/#Literal_Value_Restriction>`_."""
 
     property_type: ClassVar[term.URIRef] = OWL.hasValue
@@ -1222,8 +1233,11 @@ class Axiom(Box):
     def _funowl_inside_2(self) -> str:
         """Get the inside of the functional OWL tag representing the axiom."""
 
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Axiom) and self.annotations == other.annotations
 
-class ClassAxiom(Axiom):
+
+class ClassAxiom(Axiom, ABC):
     """A model for a class axiom."""
 
 
@@ -1304,6 +1318,14 @@ class SubClassOf(ClassAxiom):
         self.parent = ClassExpression.safe(parent)
         super().__init__(annotations)
 
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, SubClassOf)
+            and self.child == other.child
+            and self.parent == other.parent
+            and self.annotations == other.annotations
+        )
+
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.BNode:
         """Represent the subclass axiom for RDF."""
         s = self.child.to_rdflib_node(graph, converter)
@@ -1350,6 +1372,13 @@ class EquivalentClasses(ClassAxiom):
 
     def _funowl_inside_2(self) -> str:
         return list_to_funowl(self.class_expressions)
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, EquivalentClasses)
+            and self.class_expressions == other.class_expressions
+            and self.annotations == other.annotations
+        )
 
 
 class DisjointClasses(ClassAxiom):
@@ -1409,7 +1438,7 @@ class DisjointUnion(ClassAxiom):
         *,
         annotations: Annotations | None = None,
     ) -> None:
-        """Initialize a disjoint union of class expressions axiom."""
+        """Initialize a disjoint union of class expression axioms."""
         if len(class_expressions) < 2:
             raise ValueError
         self.parent = SimpleClassExpression(parent)
@@ -1434,7 +1463,7 @@ class DisjointUnion(ClassAxiom):
 """Section 9.2: Object Property Axioms"""
 
 
-class ObjectPropertyAxiom(Axiom):
+class ObjectPropertyAxiom(Axiom, ABC):
     """A grouping class for `9.2 "Object Property Axioms" <https://www.w3.org/TR/owl2-syntax/#Object_Property_Axioms>`_.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/A_objectproperty2.gif
@@ -1509,7 +1538,7 @@ class SubObjectPropertyOf(ObjectPropertyAxiom):  # 9.2.1
         return f"{self.child.to_funowl()} {self.parent.to_funowl()}"
 
 
-class _ObjectPropertyList(ObjectPropertyAxiom):
+class _ObjectPropertyList(ObjectPropertyAxiom, ABC):
     """A model for an object property axiom that accepts a list of object property expressions."""
 
     object_property_expressions: Sequence[ObjectPropertyExpression]
@@ -1550,6 +1579,13 @@ def _equivalent_xxx(
 class EquivalentObjectProperties(_ObjectPropertyList):
     """An object property axiom defined in `9.2.2 "Equivalent Object Subproperties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Object_Properties>`_."""
 
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, EquivalentObjectProperties)
+            and self.object_property_expressions == other.object_property_expressions
+            and self.annotations == other.annotations
+        )
+
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.IdentifiedNode:
         """Represent the equivalent object subproperties axiom for RDF."""
         return _equivalent_xxx(
@@ -1589,6 +1625,13 @@ def _disjoint_xxx(
 
 class DisjointObjectProperties(_ObjectPropertyList):  # 9.2.3
     """An object property axiom defined in `9.2.3 "Disjoint Object Properties" <https://www.w3.org/TR/owl2-syntax/#Disjoint_Object_Properties>`_."""
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, DisjointObjectProperties)
+            and self.object_property_expressions == other.object_property_expressions
+            and self.annotations == other.annotations
+        )
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.BNode:
         """Represent the disjoint object properties axiom for RDF."""
@@ -1799,7 +1842,7 @@ class TransitiveObjectProperty(_UnaryObjectProperty):  # 9.2.13
 """9.3: Data Property Axioms"""
 
 
-class DataPropertyAxiom(Axiom):
+class DataPropertyAxiom(Axiom, ABC):
     """A model for `9.3 "Data Property Axioms" <https://www.w3.org/TR/owl2-syntax/#Data_Property_Axioms>`_."""
 
 
@@ -1831,7 +1874,7 @@ class SubDataPropertyOf(DataPropertyAxiom):
         return f"{self.child.to_funowl()} {self.parent.to_funowl()}"
 
 
-class _DataPropertyList(DataPropertyAxiom):
+class _DataPropertyList(DataPropertyAxiom, ABC):
     """A model for a data property axiom that takes a list of data property expressions."""
 
     data_property_expressions: Sequence[DataPropertyExpression]
@@ -1856,6 +1899,13 @@ class _DataPropertyList(DataPropertyAxiom):
 
 class EquivalentDataProperties(_DataPropertyList):
     """A data property axiom for `9.3.2 "Equivalent Data Properties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Data_Properties>`_."""
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, EquivalentDataProperties)
+            and self.data_property_expressions == other.data_property_expressions
+            and self.annotations == other.annotations
+        )
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.BNode:
         """Represent the equivalent data properties axiom for RDF."""
@@ -2079,11 +2129,11 @@ class HasKey(Axiom):
 """Section 9.6: Assertions"""
 
 
-class Assertion(Axiom):
+class Assertion(Axiom, ABC):
     """Axioms for `9.6 "Assertions" <https://www.w3.org/TR/owl2-syntax/#Assertions>`_."""
 
 
-class _IndividualListAssertion(Assertion):
+class _IndividualListAssertion(Assertion, ABC):
     """A grouping class for individual equality and inequality axioms."""
 
     individuals: Sequence[IdentifierBox]
@@ -2176,7 +2226,7 @@ class ClassAssertion(Assertion):
         return f"{self.class_expression.to_funowl()} {self.individual.to_funowl()}"
 
 
-class _BaseObjectPropertyAssertion(Assertion):
+class _BaseObjectPropertyAssertion(Assertion, ABC):
     """A grouping class for positive and negative object property assertion axioms."""
 
     object_property_expression: ObjectPropertyExpression
@@ -2254,7 +2304,7 @@ class NegativeObjectPropertyAssertion(_BaseObjectPropertyAssertion):
         )
 
 
-class _BaseDataPropertyAssertion(Assertion):
+class _BaseDataPropertyAssertion(Assertion, ABC):
     """A grouping class for positive and negative data property assertion axioms."""
 
     source_individual: IdentifierBox
@@ -2421,7 +2471,7 @@ class Annotation(Box):  # 10.1
 Annotations: TypeAlias = list[Annotation]
 
 
-class AnnotationAxiom(Axiom):  # 10.2
+class AnnotationAxiom(Axiom, ABC):  # 10.2
     """A grouping class for annotation axioms defined in `10.2 "Axiom Annotations" <https://www.w3.org/TR/owl2-syntax/#Annotation_Axioms>`_.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/A_annotation.gif
