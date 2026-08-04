@@ -506,7 +506,7 @@ class TestRDF(unittest.TestCase):
             f.EquivalentClasses(
                 [
                     "a:GriffinFamilyMember",
-                    f.ObjectOneOf("a:Peter a:Lois a:Stewie a:Meg a:Chris a:Brian".split()),
+                    f.ObjectOneOf(["a:Peter", "a:Lois", "a:Stewie", "a:Meg", "a:Chris", "a:Brian"]),
                 ]
             ),
             f.SubClassOf("owl:Thing", f.DataMaxCardinality(1, "a:hasAge")),

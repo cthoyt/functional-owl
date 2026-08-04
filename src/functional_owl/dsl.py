@@ -8,11 +8,13 @@ import itertools as itt
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import curies
 import rdflib.namespace
 from curies import Converter
+from curies.vocabulary import XSDPrimitive
+from pydantic import AnyUrl
 from rdflib import OWL, RDF, RDFS, XSD, Graph, collection, term
 
 from .utils import FunctionalOWLSerializable, RDFNodeSerializable, list_to_funowl
@@ -102,8 +104,6 @@ __all__ = [
     "TransitiveObjectProperty",
 ]
 
-#: These are the literals that can be automatically converted to and from RDFLib
-SupportedLiterals: TypeAlias = int | float | bool | str | datetime.date | datetime.datetime
 
 #: A partial hint for something that can be turned into an :class:`IdentifierBox`.
 #: Here, a string gets interpreted into a CURIE using :meth:`curies.Reference.from_curie`
@@ -154,7 +154,7 @@ class IdentifierBox(Box):
         else:
             raise TypeError(f"can not make an identifier box from: {identifier}")
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, IdentifierBox):
             return False
         if isinstance(self.identifier, curies.Reference) and isinstance(
@@ -193,8 +193,8 @@ class LiteralBox(Box):
     _namespace_manager: ClassVar[rdflib.namespace.NamespaceManager] = Graph().namespace_manager
     _converter: ClassVar[Converter] = Converter.from_rdflib(_namespace_manager)
 
-    def __init__(self, literal: LiteralBoxOrHint, language: str | None = None) -> None:
-        """Initialize the literal box with a RDFlib literal or Python primitive.."""
+    def __init__(self, literal: LiteralBoxOrHint, language: str | None = None) -> None:  # noqa:C901
+        """Initialize the literal box with a RDFlib literal or Python primitive."""
         if literal is None:
             raise ValueError
         if isinstance(literal, LiteralBox):
@@ -207,6 +207,8 @@ class LiteralBox(Box):
             self.literal = term.Literal(literal, datatype=XSD.integer)
         elif isinstance(literal, float):
             self.literal = term.Literal(literal, datatype=XSD.decimal)
+        elif isinstance(literal, AnyUrl):
+            self.literal = term.Literal(str(literal), lang=XSD.anyURI)
         elif isinstance(literal, str):
             self.literal = term.Literal(literal, lang=language)
         elif isinstance(literal, datetime.date):
@@ -239,7 +241,7 @@ class LiteralBox(Box):
 
 
 IdentifierBoxOrHint: TypeAlias = IdentifierHint | IdentifierBox
-LiteralBoxOrHint: TypeAlias = LiteralBox | term.Literal | SupportedLiterals
+LiteralBoxOrHint: TypeAlias = LiteralBox | term.Literal | XSDPrimitive
 PrimitiveHint: TypeAlias = IdentifierBoxOrHint | LiteralBoxOrHint
 PrimitiveBox: TypeAlias = LiteralBox | IdentifierBox
 
@@ -252,12 +254,14 @@ def _safe_primitive_box(value: PrimitiveHint) -> PrimitiveBox:
     # so it needs to be checked first
     if isinstance(value, term.Literal):
         return LiteralBox(value)
+    if isinstance(value, AnyUrl):  # need to test before str
+        return LiteralBox(value)
     # note that we decided that strings should be parsed
     # by default as a CURIE. If you want to pass a literal
     # through, wrap it with rdflib.Literal
     if isinstance(value, str):
         return IdentifierBox(value)
-    if isinstance(value, SupportedLiterals):
+    if isinstance(value, XSDPrimitive):
         return LiteralBox(value)
     # everything else (e.g., URIRef, Reference) are for identifier boxes
     return IdentifierBox(value)
@@ -1234,7 +1238,7 @@ class Axiom(Box):
     def _funowl_inside_2(self) -> str:
         """Get the inside of the functional OWL tag representing the axiom."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Axiom) and self.annotations == other.annotations
 
 
@@ -1319,7 +1323,7 @@ class SubClassOf(ClassAxiom):
         self.parent = ClassExpression.safe(parent)
         super().__init__(annotations)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, SubClassOf)
             and self.child == other.child
@@ -1374,7 +1378,7 @@ class EquivalentClasses(ClassAxiom):
     def _funowl_inside_2(self) -> str:
         return list_to_funowl(self.class_expressions)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentClasses)
             and self.class_expressions == other.class_expressions
@@ -1580,7 +1584,7 @@ def _equivalent_xxx(
 class EquivalentObjectProperties(_ObjectPropertyList):
     """An object property axiom defined in `9.2.2 "Equivalent Object Subproperties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Object_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentObjectProperties)
             and self.object_property_expressions == other.object_property_expressions
@@ -1627,7 +1631,7 @@ def _disjoint_xxx(
 class DisjointObjectProperties(_ObjectPropertyList):  # 9.2.3
     """An object property axiom defined in `9.2.3 "Disjoint Object Properties" <https://www.w3.org/TR/owl2-syntax/#Disjoint_Object_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, DisjointObjectProperties)
             and self.object_property_expressions == other.object_property_expressions
@@ -1901,7 +1905,7 @@ class _DataPropertyList(DataPropertyAxiom, ABC):
 class EquivalentDataProperties(_DataPropertyList):
     """A data property axiom for `9.3.2 "Equivalent Data Properties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Data_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentDataProperties)
             and self.data_property_expressions == other.data_property_expressions
@@ -2538,13 +2542,8 @@ class AnnotationAssertion(AnnotationAxiom):  # 10.2.1
         )
 
     def _funowl_inside_2(self) -> str:
-        return " ".join(
-            (
-                self.annotation_property.to_funowl(),
-                self.subject.to_funowl(),
-                self.value.to_funowl(),
-            )
-        )
+        return f"{self.annotation_property.to_funowl()} {self.subject.to_funowl()} {self.value.to_funowl()}"
+
 
 
 class SubAnnotationPropertyOf(AnnotationAxiom):  # 10.2.2
