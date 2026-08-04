@@ -2545,7 +2545,6 @@ class AnnotationAssertion(AnnotationAxiom):  # 10.2.1
         return f"{self.annotation_property.to_funowl()} {self.subject.to_funowl()} {self.value.to_funowl()}"
 
 
-
 class SubAnnotationPropertyOf(AnnotationAxiom):  # 10.2.2
     """An annotation axiom defined in `10.2.2 Annotation Subproperties <https://www.w3.org/TR/owl2-syntax/#Annotation_Subproperties>`_."""
 
