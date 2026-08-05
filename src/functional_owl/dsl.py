@@ -192,17 +192,15 @@ def get_rdflib_literal(
     """Get an RDFlib literal."""
     if isinstance(literal, term.Literal):
         return literal
-    elif isinstance(
-        literal, bool
-    ):  # important this comes before int() check since bool is a subclass of int
+    # important this comes before int() check since bool is a subclass of int
+    elif isinstance(literal, bool):
         return term.Literal("true" if literal else "false", datatype=XSD.boolean)
     elif isinstance(literal, int):
-        return term.Literal(literal, datatype=XSD.integer)  # TODO what is the right type here
+        return term.Literal(literal, datatype=XSD.integer)
     elif isinstance(literal, float):
-        return term.Literal(literal, datatype=XSD.float)  # TODO what is the right type here
-    elif isinstance(
-        literal, AnyUrl
-    ):  # important this comes before str check since AnyUrl is a subclass of str
+        return term.Literal(literal, datatype=XSD.double)
+    # important this comes before str check since AnyUrl is a subclass of str
+    elif isinstance(literal, AnyUrl):
         return term.Literal(str(literal), datatype=XSD.anyURI)
     elif isinstance(literal, str):
         return term.Literal(literal, lang=language)
