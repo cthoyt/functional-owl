@@ -1287,8 +1287,6 @@ def _add_triple_annotations(
 class SubClassOf(ClassAxiom):
     r"""A class axiom defined in `9.1.1 "Subclass Axioms" <https://www.w3.org/TR/owl2-syntax/#Subclass_Axioms>`_.
 
-    Example:
-
     >>> SubClassOf("a:Baby", "a:Child")  # Each baby is a child.
     >>> SubClassOf("a:Child", "a:Person")  # Each child is a person.
     >>> ClassAssertion("a:Baby", "a:Stewie")  # Stewie is a baby.
