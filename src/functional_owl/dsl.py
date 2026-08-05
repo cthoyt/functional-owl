@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 import curies
 import rdflib.namespace
 from curies import Converter
+from curies.vocabulary import XSDPrimitive
+from pydantic import AnyUrl
 from rdflib import OWL, RDF, RDFS, XSD, Graph, collection, term
 
 from .utils import FunctionalOWLSerializable, RDFNodeSerializable, list_to_funowl
@@ -102,9 +104,6 @@ __all__ = [
     "TransitiveObjectProperty",
 ]
 
-#: These are the literals that can be automatically converted to and from RDFLib
-SupportedLiterals: TypeAlias = int | float | bool | str | datetime.date | datetime.datetime
-
 #: A partial hint for something that can be turned into an :class:`IdentifierBox`.
 #: Here, a string gets interpreted into a CURIE using :meth:`curies.Reference.from_curie`
 IdentifierHint: TypeAlias = term.URIRef | curies.Reference | str
@@ -186,6 +185,35 @@ class IdentifierBox(Box):
         raise RuntimeError
 
 
+# TODO upstream into :mod:`curies`
+def get_rdflib_literal(
+    literal: rdflib.Literal | XSDPrimitive, language: str | None = None
+) -> rdflib.Literal:
+    """Get an RDFlib literal."""
+    if isinstance(literal, term.Literal):
+        return literal
+    elif isinstance(
+        literal, bool
+    ):  # important this comes before int() check since bool is a subclass of int
+        return term.Literal("true" if literal else "false", datatype=XSD.boolean)
+    elif isinstance(literal, int):
+        return term.Literal(literal, datatype=XSD.integer)  # TODO what is the right type here
+    elif isinstance(literal, float):
+        return term.Literal(literal, datatype=XSD.float)  # TODO what is the right type here
+    elif isinstance(
+        literal, AnyUrl
+    ):  # important this comes before str check since AnyUrl is a subclass of str
+        return term.Literal(str(literal), datatype=XSD.anyURI)
+    elif isinstance(literal, str):
+        return term.Literal(literal, lang=language)
+    elif isinstance(literal, datetime.date):
+        return term.Literal(literal, datatype=XSD.date)
+    elif isinstance(literal, datetime.datetime):
+        return term.Literal(literal, datatype=XSD.dateTime)
+    else:
+        raise TypeError(f"Unhandled type for literal: {literal}")
+
+
 class LiteralBox(Box):
     """A simple wrapper around a literal."""
 
@@ -194,27 +222,11 @@ class LiteralBox(Box):
     _converter: ClassVar[Converter] = Converter.from_rdflib(_namespace_manager)
 
     def __init__(self, literal: LiteralBoxOrHint, language: str | None = None) -> None:
-        """Initialize the literal box with a RDFlib literal or Python primitive.."""
-        if literal is None:
-            raise ValueError
+        """Initialize the literal box with a RDFlib literal or Python primitive."""
         if isinstance(literal, LiteralBox):
             self.literal = literal.literal
-        elif isinstance(literal, term.Literal):
-            self.literal = literal
-        elif isinstance(literal, bool):
-            self.literal = term.Literal(str(literal).lower(), datatype=XSD.boolean)
-        elif isinstance(literal, int):
-            self.literal = term.Literal(literal, datatype=XSD.integer)
-        elif isinstance(literal, float):
-            self.literal = term.Literal(literal, datatype=XSD.decimal)
-        elif isinstance(literal, str):
-            self.literal = term.Literal(literal, lang=language)
-        elif isinstance(literal, datetime.date):
-            self.literal = term.Literal(literal, datatype=XSD.date)
-        elif isinstance(literal, datetime.datetime):
-            self.literal = term.Literal(literal, datatype=XSD.dateTime)
         else:
-            raise TypeError(f"Unhandled type for literal: {literal}")
+            self.literal = get_rdflib_literal(literal, language)
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.Literal:
         """Represent this literal for RDF."""
@@ -239,7 +251,7 @@ class LiteralBox(Box):
 
 
 IdentifierBoxOrHint: TypeAlias = IdentifierHint | IdentifierBox
-LiteralBoxOrHint: TypeAlias = LiteralBox | term.Literal | SupportedLiterals
+LiteralBoxOrHint: TypeAlias = LiteralBox | term.Literal | XSDPrimitive
 PrimitiveHint: TypeAlias = IdentifierBoxOrHint | LiteralBoxOrHint
 PrimitiveBox: TypeAlias = LiteralBox | IdentifierBox
 
@@ -252,12 +264,14 @@ def _safe_primitive_box(value: PrimitiveHint) -> PrimitiveBox:
     # so it needs to be checked first
     if isinstance(value, term.Literal):
         return LiteralBox(value)
+    if isinstance(value, AnyUrl):  # need to test before str
+        return LiteralBox(value)
     # note that we decided that strings should be parsed
     # by default as a CURIE. If you want to pass a literal
     # through, wrap it with rdflib.Literal
     if isinstance(value, str):
         return IdentifierBox(value)
-    if isinstance(value, SupportedLiterals):
+    if isinstance(value, XSDPrimitive):
         return LiteralBox(value)
     # everything else (e.g., URIRef, Reference) are for identifier boxes
     return IdentifierBox(value)
