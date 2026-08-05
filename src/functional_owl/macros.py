@@ -16,6 +16,7 @@ from . import dsl
 
 __all__ = [
     "AltMacro",
+    "ClassComplementMacro",
     "DescriptionMacro",
     "IsAnonymousMacro",
     "IsObsoleteMacro",
@@ -423,3 +424,21 @@ class ClassUnionMacro(ObjectListOfMacro):
     """A macro that represents a class union."""
 
     object_list_cls = dsl.ObjectUnionOf
+
+
+class ClassComplementMacro(Macro):
+    """A macro for class that is an object complement to another class."""
+
+    def __init__(
+        self,
+        subject: dsl.IdentifierBoxOrHint,
+        target: dsl.IdentifierBoxOrHint,
+        *,
+        annotations: dsl.Annotations | None = None,
+    ) -> None:
+        """Instantiate the class complement."""
+        super().__init__(
+            dsl.EquivalentClasses(
+                [subject, dsl.ObjectComplementOf(target)], annotations=annotations
+            )
+        )

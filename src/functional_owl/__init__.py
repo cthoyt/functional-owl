@@ -83,6 +83,7 @@ from .dsl import (
 )
 from .macros import (
     AltMacro,
+    ClassComplementMacro,
     DescriptionMacro,
     IsAnonymousMacro,
     IsObsoleteMacro,
@@ -110,6 +111,7 @@ __all__ = [
     "Box",
     "ClassAssertion",
     "ClassAxiom",
+    "ClassComplementMacro",
     "ClassExpression",
     "DataAllValuesFrom",
     "DataComplementOf",
