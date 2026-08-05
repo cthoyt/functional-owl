@@ -87,7 +87,7 @@ class StringMacro(Macro):
         language: str | None = None,
         annotations: dsl.Annotations | None = None,
     ) -> None:
-        """Instatitate the string assertion macro."""
+        """Instantiate the string assertion macro."""
         super().__init__(
             dsl.AnnotationAssertion(
                 self.annotation_property,
@@ -141,7 +141,7 @@ class ObjectAnnotationMacro(Macro):
     annotation_property: t.ClassVar[Reference]
 
     def __init__(self, subject: dsl.IdentifierBoxOrHint, target: dsl.IdentifierBoxOrHint) -> None:
-        """Instatitate the annotation assertion macro."""
+        """Instantiate the annotation assertion macro."""
         super().__init__(dsl.AnnotationAssertion(self.annotation_property, subject, target))
 
 
@@ -160,8 +160,7 @@ class ReplacedByMacro(ObjectAnnotationMacro):
 class OBOConsiderMacro(ObjectAnnotationMacro):
     """A macro for OBO consider assertion."""
 
-    # FIXME replace with see also
-    annotation_property = Reference(prefix="oboInOwl", identifier="consider")
+    annotation_property = v.obo_consider
 
 
 class OBOIsSubsetMacro(ObjectAnnotationMacro):
@@ -176,7 +175,7 @@ class BooleanAnnotationMacro(Macro):
     annotation_property: t.ClassVar[Reference]
 
     def __init__(self, subject: dsl.IdentifierBoxOrHint, value: bool = True) -> None:
-        """Instatitate the annotation assertion macro, defaults to "true"."""
+        """Instantiate the annotation assertion macro, defaults to "true"."""
         super().__init__(
             dsl.AnnotationAssertion(self.annotation_property, subject, dsl.LiteralBox(value))
         )
@@ -185,34 +184,34 @@ class BooleanAnnotationMacro(Macro):
 class IsAnonymousMacro(BooleanAnnotationMacro):
     """A macro for an "is anonymous" assertion."""
 
-    annotation_property = Reference(prefix="oboInOwl", identifier="is_anonymous")
+    annotation_property = v.obo_is_anonymous
 
 
 class IsOBOBuiltinMacro(BooleanAnnotationMacro):
-    """A macro for an "builtin" assertion."""
+    """A macro for a "builtin" assertion."""
 
-    annotation_property = Reference(prefix="oboInOwl", identifier="builtin")
+    annotation_property = v.obo_builtin
 
 
 class OBOIsClassLevelMacro(BooleanAnnotationMacro):
     """A macro for OBO "is class level" assertion."""
 
-    annotation_property = Reference(prefix="oboInOwl", identifier="is_class_level")
+    annotation_property = v.obo_is_class_level
 
 
 class IsObsoleteMacro(BooleanAnnotationMacro):
     """A macro for obsoletion assertion."""
 
-    annotation_property = Reference(prefix="owl", identifier="deprecated")
+    annotation_property = v.owl_deprecated
 
 
 class IsCyclic(BooleanAnnotationMacro):
     """A macro for "is cyclic" assertion."""
 
-    annotation_property = Reference(prefix="oboInOwl", identifier="is_cyclic")
+    annotation_property = v.obo_is_cyclic
 
 
-HAS_SYNONYM_TYPE = Reference.from_curie("oboInOwl:hasSynonymType")
+HAS_SYNONYM_TYPE = v.has_synonym_type
 HAS_MAPPING_JUSTIFICATION = Reference.from_curie("sssom:has_mapping_justification")
 
 
@@ -247,7 +246,7 @@ class SynonymMacro(Macro):
         synonym_type: dsl.IdentifierBoxOrHint | None = None,
         provenance: Sequence[dsl.PrimitiveHint] | None = None,
     ) -> None:
-        """Instatitate the synonym annotation assertion macro."""
+        """Instantiate the synonym annotation assertion macro."""
         if annotations is None:
             annotations = []
         if provenance:
@@ -289,7 +288,7 @@ class MappingMacro(Macro):
         annotations: dsl.Annotations | None = None,
         mapping_justification: dsl.IdentifierBoxOrHint | None = None,
     ) -> None:
-        """Instatitate the mapping annotation assertion macro."""
+        """Instantiate the mapping annotation assertion macro."""
         if annotations is None:
             annotations = []
         if mapping_justification is not None:
@@ -320,8 +319,8 @@ class XrefMacro(MappingMacro):
         target: dsl.IdentifierBoxOrHint,
         **kwargs: t.Any,
     ) -> None:
-        """Instatitate the database cross-reference annotation assertion macro."""
-        super().__init__(subject=subject, predicate="oboInOwl:hasDbXref", target=target, **kwargs)
+        """Instantiate the database cross-reference annotation assertion macro."""
+        super().__init__(subject=subject, predicate=v.has_dbxref, target=target, **kwargs)
 
 
 class HoldsOverChain(Macro):
@@ -371,7 +370,7 @@ class DataPropertyMaxCardinality(Macro):
         """Initialize a data property maximum cardinality macro."""
         super().__init__(
             dsl.SubClassOf(
-                "owl:Thing",
+                v.owl_thing,
                 dsl.DataMaxCardinality(
                     cardinality=cardinality, data_property_expression=data_property_expression
                 ),
