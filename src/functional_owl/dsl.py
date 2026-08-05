@@ -302,14 +302,13 @@ def _yield_connector_nodes(
 ) -> Iterable[term.IdentifiedNode]:
     """Yield the nodes representing parts of a collection.
 
-    This is different from simply doing :meth:`rdflib.graph.items`,
-    because that function gets the "first" parts - this function
-    gets the blank nodes that are representing the prongs in the
-    list itself.
+    This is different from simply doing :meth:`rdflib.graph.items`, because that
+    function gets the "first" parts - this function gets the blank nodes that are
+    representing the prongs in the list itself.
 
-    We have to do this because ROBOT implements RDF conversion for
-    :class:`DataOneOf` strangely, where each blank node in the collection
-    gets a triple typing it as a list ``<bnode> rdf:type rdfs:List``
+    We have to do this because ROBOT implements RDF conversion for :class:`DataOneOf`
+    strangely, where each blank node in the collection gets a triple typing it as a list
+    ``<bnode> rdf:type rdfs:List``
     """
     yield start
     item: term.IdentifiedNode | None = start
@@ -358,9 +357,7 @@ class Declaration(Box):
         return f"{self.type}({self.node.to_funowl()})"
 
 
-"""
-Section 6: Property Expressions
-"""
+"""Section 6: Property Expressions"""
 
 
 class ObjectPropertyExpression(Box, ABC):
@@ -403,9 +400,9 @@ class ObjectInverseOf(ObjectPropertyExpression):
 
     .. warning::
 
-        This is the only instance in the specification where the
-        name of the tag is not the same as the name of the element
-        in the spec, which is ``InverseObjectProperty``.
+        This is the only instance in the specification where the name of the tag is not
+        the same as the name of the element in the spec, which is
+        ``InverseObjectProperty``.
     """
 
     object_property: IdentifierBox
@@ -467,9 +464,7 @@ class SimpleDataPropertyExpression(IdentifierBox, DataPropertyExpression):
         return node
 
 
-"""
-Section 7: Data Ranges
-"""
+"""Section 7: Data Ranges"""
 
 
 class DataRange(Box, ABC):
@@ -539,7 +534,8 @@ class DataUnionOf(_ListDataRange):
 class DataComplementOf(DataRange):
     """A data range defined in `7.3 Complement of Data Ranges <https://www.w3.org/TR/owl2-syntax/#Complement_of_Data_Ranges>`_.
 
-    The following complement data range contains literals that are not positive integers:
+    The following complement data range contains literals that are not positive
+    integers:
 
     >>> DataComplementOf("xsd:positiveInteger")
 
@@ -571,7 +567,8 @@ class DataComplementOf(DataRange):
 class DataOneOf(DataRange):
     """A data range defined in `7.4 Enumeration of Literals <https://www.w3.org/TR/owl2-syntax/#Enumeration_of_Literals>`_.
 
-    The following data range contains exactly two literals: the string "Peter" and the integer one.
+    The following data range contains exactly two literals: the string "Peter" and the
+    integer one.
 
     >>> DataOneOf(["Peter", 1])
 
@@ -621,7 +618,8 @@ class DatatypeRestriction(DataRange):
         """Initialize a datatype restriction.
 
         :param datatype: The base datatype
-        :param pairs: A list of pairs of restrictions (e.g., ``xsd:minInclusive``) and literal values
+        :param pairs: A list of pairs of restrictions (e.g., ``xsd:minInclusive``) and
+            literal values
         """
         self.datatype = IdentifierBox(datatype)
         self.pairs = [(IdentifierBox(facet), LiteralBox(value)) for facet, value in pairs]
@@ -655,9 +653,7 @@ class DatatypeRestriction(DataRange):
         return f"{self.datatype.to_funowl()} {pairs_funowl}"
 
 
-"""
-`Section 8: Class Expressions <https://www.w3.org/TR/owl2-syntax/#Class_Expressions>`_
-"""
+"""`Section 8: Class Expressions <https://www.w3.org/TR/owl2-syntax/#Class_Expressions>`_"""
 
 
 class ClassExpression(Box, ABC):
@@ -691,8 +687,8 @@ class SimpleClassExpression(IdentifierBox, ClassExpression):
 class _ObjectList(ClassExpression):
     """An abstract model for class expressions defined by lists.
 
-    Defined in `8.1 Propositional Connectives and Enumeration of
-    Individuals <Propositional_Connectives_and_Enumeration_of_Individuals>`_
+    Defined in `8.1 Propositional Connectives and Enumeration of Individuals
+    <Propositional_Connectives_and_Enumeration_of_Individuals>`_
 
     .. image:: https://www.w3.org/TR/owl2-syntax/C_propositional.gif
     """
@@ -728,8 +724,8 @@ class ObjectIntersectionOf(_ObjectList):
     >>> ClassAssertion("a:Dog", "a:Brian")  # Brian is a dog.
     >>> ClassAssertion("a:CanTalk", "a:Brian")  # Brian can talk.
 
-    The following class expression describes all dogs that can talk;
-    furthermore, ``a:Brian`` is classified as its instance.
+    The following class expression describes all dogs that can talk; furthermore,
+    ``a:Brian`` is classified as its instance.
 
     >>> ObjectIntersectionOf(["a:Dog", "a:CanTalk"])
     """
@@ -745,9 +741,9 @@ class ObjectUnionOf(_ObjectList):
     >>> ClassAssertion("a:Man", "a:Peter")  # Peter is a man.
     >>> ClassAssertion("a:Woman", "a:Lois")  # Lois is a woman.
 
-    The following class expression describes all individuals that are instances of either
-    ``a:Man`` or ``a:Woman``; furthermore, both ``a:Peter`` and ``a:Lois`` are classified
-    as its instances:
+    The following class expression describes all individuals that are instances of
+    either ``a:Man`` or ``a:Woman``; furthermore, both ``a:Peter`` and ``a:Lois`` are
+    classified as its instances:
 
     >>> ObjectUnionOf(["a:Man", "a:Woman"])
     """
@@ -777,8 +773,8 @@ class ObjectComplementOf(ClassExpression):
 
     >>> ClassAssertion("a:Dog", "a:Brian")  # Brian is a dog.
 
-    One might expect ``a:Brian`` to be classified as an instance of
-    the following class expression:
+    One might expect ``a:Brian`` to be classified as an instance of the following class
+    expression:
 
     >>> ObjectComplementOf("a:Bird")
 
@@ -841,13 +837,15 @@ def get_owl_restriction(
     """Generate a blank node representing an OWL restriction.
 
     :param graph: An RDFlib graph
-    :param object_property_expression: The object property expression that goes with ``owl:onProperty``
-    :param restriction_predicate: The predicate that connects the restriction to the target.
-        Can be one of ``owl:someValuesFrom``, ``owl:allValuesFrom``,
+    :param object_property_expression: The object property expression that goes with
+        ``owl:onProperty``
+    :param restriction_predicate: The predicate that connects the restriction to the
+        target. Can be one of ``owl:someValuesFrom``, ``owl:allValuesFrom``,
         ``owl:hasValue``, ``owl:hasSelf``, or something more exotic
     :param restriction_target: The target reference or literal
     :param converter: a converter for CURIEs to URIs
-    :return: A blank node representing an OWL restriction
+
+    :returns: A blank node representing an OWL restriction
     """
     node = term.BNode()
     graph.add((node, RDF.type, OWL.Restriction))
@@ -898,7 +896,7 @@ class ObjectSomeValuesFrom(_ObjectValuesFrom):
 
 
 class ObjectAllValuesFrom(_ObjectValuesFrom):
-    """A class expression defined in `8.2.2  Universal Quantification <https://www.w3.org/TR/owl2-syntax/# Universal_Quantification>`_."""
+    """A class expression defined in `8.2.2 Universal Quantification <https://www.w3.org/TR/owl2-syntax/#Universal_Quantification>`_."""
 
     restriction_predicate: ClassVar[term.URIRef] = OWL.allValuesFrom
 
@@ -1012,8 +1010,7 @@ class _Cardinality(ClassExpression):
 class _ObjectCardinality(_Cardinality):
     """A grouping class for object cardinality models.
 
-    The three subclasses only differ by the qualified and unqualified
-    ranges used.
+    The three subclasses only differ by the qualified and unqualified ranges used.
 
     .. image:: https://www.w3.org/TR/owl2-syntax/C_objectcardinality.gif
     """
@@ -1166,8 +1163,7 @@ class DataHasValue(ClassExpression):
 class _DataCardinality(_Cardinality):
     """A grouping class for data cardinality models.
 
-    The three subclasses only differ by the qualified and unqualified
-    ranges used.
+    The three subclasses only differ by the qualified and unqualified ranges used.
     """
 
     property_type: ClassVar[term.URIRef] = OWL.onDataRange
@@ -1210,9 +1206,7 @@ class DataExactCardinality(_DataCardinality):
     property_unqualified: ClassVar[term.URIRef] = OWL.cardinality
 
 
-"""
-`Section 9: Axioms <https://www.w3.org/TR/owl2-syntax/#Axioms>`_
-"""
+"""`Section 9: Axioms <https://www.w3.org/TR/owl2-syntax/#Axioms>`_"""
 
 
 class Axiom(Box):
@@ -1290,12 +1284,13 @@ class SubClassOf(ClassAxiom):
     r"""A class axiom defined in `9.1.1 "Subclass Axioms" <https://www.w3.org/TR/owl2-syntax/#Subclass_Axioms>`_.
 
     Example:
+
     >>> SubClassOf("a:Baby", "a:Child")  # Each baby is a child.
     >>> SubClassOf("a:Child", "a:Person")  # Each child is a person.
     >>> ClassAssertion("a:Baby", "a:Stewie")  # Stewie is a baby.
 
-    This axiom can be applied to more complicated expressions. For example,
-    here's the long form for a :class:`FunctionalDataProperty`:
+    This axiom can be applied to more complicated expressions. For example, here's the
+    long form for a :class:`FunctionalDataProperty`:
 
     >>> axiom = SubClassOf("owl:Thing", DataMaxCardinality(1, "a:hasAge"))
 
@@ -1726,16 +1721,15 @@ class ObjectPropertyDomain(_ObjectPropertyTyping):  # 9.2.5
 class ObjectPropertyRange(_ObjectPropertyTyping):  # 9.2.6
     """An object property axiom defined in `9.2.5 "Object Property Range" <https://www.w3.org/TR/owl2-syntax/#Object_Property_Range>`_.
 
-    Consider the ontology consisting of the following axioms.
+    Consider the ontology consisting of the following axioms. The range of the
+    ``a:hasDog`` property is the class ``a:Dog``.
 
-    >>> # The range of the a:hasDog property is the class a:Dog.
     >>> ObjectPropertyRange("a:hasDog", "a:Dog")
     >>> ObjectPropertyAssertion("a:hasDog", "a:Peter", "a:Brian")  # Brian is a dog of Peter.
 
-    By the first axiom, each individual that has an incoming
-    ``a:hasDog`` connection must be an instance of ``a:Dog``.
-    Therefore, ``a:Brian`` can be classified as an instance of
-    ``a:Dog``; that is, this ontology entails the following assertion:
+    By the first axiom, each individual that has an incoming ``a:hasDog`` connection
+    must be an instance of ``a:Dog``. Therefore, ``a:Brian`` can be classified as an
+    instance of ``a:Dog``; that is, this ontology entails the following assertion:
 
     >>> ClassAssertion("a:Dog", "a:Brian")
     """
@@ -1785,18 +1779,17 @@ class FunctionalObjectProperty(_UnaryObjectProperty):  # 9.2.7
     ...     "a:hasFather", "a:Stewie", "a:Peter_Griffin"
     ... )  # Peter Griffin is Stewie's father.
 
-    By the first axiom, ``a:hasFather`` can point from a:Stewie to
-    at most one distinct individual, so ``a:Peter`` and ``a:Peter_Griffin``
-    must be equal; that is, this ontology entails the following assertion:
+    By the first axiom, ``a:hasFather`` can point from a:Stewie to at most one distinct
+    individual, so ``a:Peter`` and ``a:Peter_Griffin`` must be equal; that is, this
+    ontology entails the following assertion:
 
     >>> SameIndividual(["a:Peter", "a:Peter_Griffin"])
 
-    One might expect the previous ontology to be inconsistent, since
-    the ``a:hasFather`` property points to two different values for
-    ``a:Stewie``. OWL 2, however, does not make the unique name assumption,
-    so ``a:Peter`` and ``a:Peter_Griffin`` are not necessarily distinct individuals.
-    If the ontology were extended with the following assertion, then it
-    would indeed become inconsistent:
+    One might expect the previous ontology to be inconsistent, since the ``a:hasFather``
+    property points to two different values for ``a:Stewie``. OWL 2, however, does not
+    make the unique name assumption, so ``a:Peter`` and ``a:Peter_Griffin`` are not
+    necessarily distinct individuals. If the ontology were extended with the following
+    assertion, then it would indeed become inconsistent:
 
     >>> DifferentIndividuals(["a:Peter", "a:Peter_Griffin"])
     """
@@ -1994,12 +1987,11 @@ class FunctionalDataProperty(DataPropertyAxiom):
     >>> FunctionalDataProperty("a:hasAge")  # Each object can have at most one age.
     >>> DataPropertyAssertion("a:hasAge", "a:Meg", 17)  # Meg is seventeen years old.
 
-    By the first axiom, ``a:hasAge`` can point from ``a:Meg`` to at most one
-    distinct literal. In this example ontology, this axiom is satisfied. If,
-    however, the ontology were extended with the following assertion, the
-    semantics of functionality axioms would imply that ``"15"^^xsd:integer`` is
-    equal to ``"17"^^xsd:integer``, which is a contradiction and the ontology
-    would become inconsistent:
+    By the first axiom, ``a:hasAge`` can point from ``a:Meg`` to at most one distinct
+    literal. In this example ontology, this axiom is satisfied. If, however, the
+    ontology were extended with the following assertion, the semantics of functionality
+    axioms would imply that ``"15"^^xsd:integer`` is equal to ``"17"^^xsd:integer``,
+    which is a contradiction and the ontology would become inconsistent:
 
     >>> DataPropertyAssertion("a:hasAge", "a:Meg", 15)
     """
@@ -2395,10 +2387,9 @@ class Annotation(Box):  # 10.1
     ...     ],
     ... )
 
-    Annotations can even be used on themselves, adding arbitrary levels of detail.
-    In the following example, we annotate the affiliation of the contributor
-    via the `wd:P1416 (affiliation) <https://www.wikidata.org/wiki/Property:P1416>`_
-    predicate.
+    Annotations can even be used on themselves, adding arbitrary levels of detail. In
+    the following example, we annotate the affiliation of the contributor via the
+    `wd:P1416 (affiliation) <https://www.wikidata.org/wiki/Property:P1416>`_ predicate.
 
     >>> AnnotationAssertion(
     ...     "skos:exactMatch",
@@ -2614,10 +2605,9 @@ class AnnotationPropertyDomain(AnnotationPropertyTypingAxiom):  # 10.2.3
 class AnnotationPropertyRange(AnnotationPropertyTypingAxiom):  # 10.2.4
     """An annotation axiom defined in `10.2.4 Annotation Property Range <https://www.w3.org/TR/owl2-syntax/#Annotation_Property_Range>`_.
 
-    For example, the range of all ``rdfs:label`` should be a string.
-    This can be represented as with the functional OWL
-    ``AnnotationPropertyRange( rdfs:label xsd:string )``, or in
-    Python like the following:
+    For example, the range of all ``rdfs:label`` should be a string. This can be
+    represented as with the functional OWL ``AnnotationPropertyRange( rdfs:label
+    xsd:string )``, or in Python like the following:
 
     Using :mod:`rdflib` namespaces:
 
