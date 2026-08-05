@@ -8,7 +8,7 @@ import itertools as itt
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import curies
 import rdflib.namespace
@@ -154,7 +154,7 @@ class IdentifierBox(Box):
         else:
             raise TypeError(f"can not make an identifier box from: {identifier}")
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, IdentifierBox):
             return False
         if isinstance(self.identifier, curies.Reference) and isinstance(
@@ -1228,7 +1228,7 @@ class Axiom(Box):
     def _funowl_inside_2(self) -> str:
         """Get the inside of the functional OWL tag representing the axiom."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Axiom) and self.annotations == other.annotations
 
 
@@ -1284,7 +1284,6 @@ class SubClassOf(ClassAxiom):
     r"""A class axiom defined in `9.1.1 "Subclass Axioms" <https://www.w3.org/TR/owl2-syntax/#Subclass_Axioms>`_.
 
     Example:
-
     >>> SubClassOf("a:Baby", "a:Child")  # Each baby is a child.
     >>> SubClassOf("a:Child", "a:Person")  # Each child is a person.
     >>> ClassAssertion("a:Baby", "a:Stewie")  # Stewie is a baby.
@@ -1314,7 +1313,7 @@ class SubClassOf(ClassAxiom):
         self.parent = ClassExpression.safe(parent)
         super().__init__(annotations)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, SubClassOf)
             and self.child == other.child
@@ -1369,7 +1368,7 @@ class EquivalentClasses(ClassAxiom):
     def _funowl_inside_2(self) -> str:
         return list_to_funowl(self.class_expressions)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentClasses)
             and self.class_expressions == other.class_expressions
@@ -1575,7 +1574,7 @@ def _equivalent_xxx(
 class EquivalentObjectProperties(_ObjectPropertyList):
     """An object property axiom defined in `9.2.2 "Equivalent Object Subproperties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Object_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentObjectProperties)
             and self.object_property_expressions == other.object_property_expressions
@@ -1622,7 +1621,7 @@ def _disjoint_xxx(
 class DisjointObjectProperties(_ObjectPropertyList):  # 9.2.3
     """An object property axiom defined in `9.2.3 "Disjoint Object Properties" <https://www.w3.org/TR/owl2-syntax/#Disjoint_Object_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, DisjointObjectProperties)
             and self.object_property_expressions == other.object_property_expressions
@@ -1894,7 +1893,7 @@ class _DataPropertyList(DataPropertyAxiom, ABC):
 class EquivalentDataProperties(_DataPropertyList):
     """A data property axiom for `9.3.2 "Equivalent Data Properties" <https://www.w3.org/TR/owl2-syntax/#Equivalent_Data_Properties>`_."""
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, EquivalentDataProperties)
             and self.data_property_expressions == other.data_property_expressions
@@ -2529,13 +2528,7 @@ class AnnotationAssertion(AnnotationAxiom):  # 10.2.1
         )
 
     def _funowl_inside_2(self) -> str:
-        return " ".join(
-            (
-                self.annotation_property.to_funowl(),
-                self.subject.to_funowl(),
-                self.value.to_funowl(),
-            )
-        )
+        return f"{self.annotation_property.to_funowl()} {self.subject.to_funowl()} {self.value.to_funowl()}"
 
 
 class SubAnnotationPropertyOf(AnnotationAxiom):  # 10.2.2

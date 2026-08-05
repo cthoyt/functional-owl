@@ -37,7 +37,6 @@ EXAMPLE_PREFIX_MAP = {
     "sssom": "https://w3id.org/sssom/",
     "semapv": "https://w3id.org/semapv/vocab/",
     "skos": "http://www.w3.org/2004/02/skos/core#",
-    #
     "a": "https://example.org/a:",
     "orcid": "https://orcid.org",
     "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
