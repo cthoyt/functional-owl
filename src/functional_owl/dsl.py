@@ -104,7 +104,6 @@ __all__ = [
     "TransitiveObjectProperty",
 ]
 
-
 #: A partial hint for something that can be turned into an :class:`IdentifierBox`.
 #: Here, a string gets interpreted into a CURIE using :meth:`curies.Reference.from_curie`
 IdentifierHint: TypeAlias = term.URIRef | curies.Reference | str
@@ -186,6 +185,31 @@ class IdentifierBox(Box):
         raise RuntimeError
 
 
+# TODO upstream into :mod:`curies`
+def get_rdflib_literal(
+    literal: rdflib.Literal | XSDPrimitive, language: str | None = None
+) -> rdflib.Literal:
+    """Get an RDFlib literal."""
+    if isinstance(literal, term.Literal):
+        return literal
+    elif isinstance(literal, bool):
+        return term.Literal("true" if literal else "false", datatype=XSD.boolean)
+    elif isinstance(literal, int):
+        return term.Literal(literal, datatype=XSD.integer)
+    elif isinstance(literal, float):
+        return term.Literal(literal, datatype=XSD.decimal)
+    elif isinstance(literal, AnyUrl):
+        return term.Literal(str(literal), lang=XSD.anyURI)
+    elif isinstance(literal, str):
+        return term.Literal(literal, lang=language)
+    elif isinstance(literal, datetime.date):
+        return term.Literal(literal, datatype=XSD.date)
+    elif isinstance(literal, datetime.datetime):
+        return term.Literal(literal, datatype=XSD.dateTime)
+    else:
+        raise TypeError(f"Unhandled type for literal: {literal}")
+
+
 class LiteralBox(Box):
     """A simple wrapper around a literal."""
 
@@ -193,30 +217,12 @@ class LiteralBox(Box):
     _namespace_manager: ClassVar[rdflib.namespace.NamespaceManager] = Graph().namespace_manager
     _converter: ClassVar[Converter] = Converter.from_rdflib(_namespace_manager)
 
-    def __init__(self, literal: LiteralBoxOrHint, language: str | None = None) -> None:  # noqa:C901
+    def __init__(self, literal: LiteralBoxOrHint, language: str | None = None) -> None:
         """Initialize the literal box with a RDFlib literal or Python primitive."""
-        if literal is None:
-            raise ValueError
         if isinstance(literal, LiteralBox):
             self.literal = literal.literal
-        elif isinstance(literal, term.Literal):
-            self.literal = literal
-        elif isinstance(literal, bool):
-            self.literal = term.Literal(str(literal).lower(), datatype=XSD.boolean)
-        elif isinstance(literal, int):
-            self.literal = term.Literal(literal, datatype=XSD.integer)
-        elif isinstance(literal, float):
-            self.literal = term.Literal(literal, datatype=XSD.decimal)
-        elif isinstance(literal, AnyUrl):
-            self.literal = term.Literal(str(literal), lang=XSD.anyURI)
-        elif isinstance(literal, str):
-            self.literal = term.Literal(literal, lang=language)
-        elif isinstance(literal, datetime.date):
-            self.literal = term.Literal(literal, datatype=XSD.date)
-        elif isinstance(literal, datetime.datetime):
-            self.literal = term.Literal(literal, datatype=XSD.dateTime)
         else:
-            raise TypeError(f"Unhandled type for literal: {literal}")
+            self.literal = get_rdflib_literal(literal, language)
 
     def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.Literal:
         """Represent this literal for RDF."""
