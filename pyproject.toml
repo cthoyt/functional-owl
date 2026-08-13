@@ -36,7 +36,17 @@ classifiers = [
 keywords = [
     "snekpack", # please keep this keyword to credit the cookiecutter-snekpack template
     "cookiecutter",
-    # TODO add your own free-text keywords
+    "web ontology language",
+    "ontologies",
+    "semantic web",
+    "linked data",
+    "linked open data",
+    "knowledge graphs",
+    "OWL",
+    "OFN",
+    "OWL functional notation",
+    "OWL/XML",
+    "OWL/RDF",
 ]
 
 # License Information.
