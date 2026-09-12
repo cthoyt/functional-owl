@@ -11,7 +11,7 @@ from typing import Literal, TextIO, TypeAlias
 
 import curies
 from curies import Converter
-from pystow.utils import safe_open, safe_write_text
+from pystow.utils import safe_write_text, write_rdflib
 from rdflib import OWL, RDF, Graph, term
 
 from .dsl import Annotation, Annotations, Box
@@ -109,8 +109,7 @@ class Document:
     def write_rdf(self, path: str | Path | TextIO, *, format: str | None = None) -> None:
         """Write RDF to a file."""
         graph = self.to_rdf()
-        with safe_open(path, representation="binary", operation="write") as file:
-            graph.serialize(file, format=format or "ttl")
+        write_rdflib(graph, path, format=format)
 
     def to_rdf(self) -> Graph:
         """Get an RDFlib graph representing the ontology."""
