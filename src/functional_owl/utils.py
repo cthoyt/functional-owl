@@ -77,7 +77,7 @@ class XMLSerializable(ABC):
     """An object that can be serialized to XML."""
 
     @abstractmethod
-    def to_xml(self) -> etree.Element:
+    def to_xml(self, converter: curies.Converter, nsmap: dict[str, str]) -> etree.Element:
         """Make XML."""
 
 
