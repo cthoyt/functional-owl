@@ -250,6 +250,8 @@ class Ontology(Box):
         root = etree.Element("rdf:RDF")
         ontology = etree.Element("owl:Ontology")
         root.append(ontology)
+        for axiom in self.axioms:
+            root.append(axiom.to_xml())
         return root
 
 

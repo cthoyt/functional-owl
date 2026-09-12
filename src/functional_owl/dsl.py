@@ -17,7 +17,7 @@ from curies.vocabulary import XSDPrimitive
 from pydantic import AnyUrl
 from rdflib import OWL, RDF, RDFS, XSD, Graph, collection, term
 
-from .utils import FunctionalOWLSerializable, RDFNodeSerializable, list_to_funowl
+from .utils import FunctionalOWLSerializable, RDFNodeSerializable, XMLSerializable, list_to_funowl
 
 if TYPE_CHECKING:
     import bioregistry
@@ -109,7 +109,7 @@ __all__ = [
 IdentifierHint: TypeAlias = term.URIRef | curies.Reference | str
 
 
-class Box(FunctionalOWLSerializable, RDFNodeSerializable, ABC):
+class Box(FunctionalOWLSerializable, RDFNodeSerializable, XMLSerializable, ABC):
     """A model for objects that can be represented as nodes in RDF and Functional OWL."""
 
 
