@@ -7,11 +7,11 @@ import sys
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TextIO, TypeAlias
+from typing import Literal, TextIO, TypeAlias
 
 import curies
 from curies import Converter
-from pystow.utils import safe_write_text
+from pystow.utils import safe_write_text, write_rdflib
 from rdflib import OWL, RDF, Graph, term
 
 from .dsl import Annotation, Annotations, Box
@@ -27,6 +27,8 @@ __all__ = [
 
 PrefixHint: TypeAlias = dict[str, str] | list["Prefix"] | curies.Converter
 
+WriteFormat: TypeAlias = Literal["ofn", "rdf"]
+
 
 def write_ontology(
     *,
@@ -37,8 +39,10 @@ def write_ontology(
     annotations: Annotations | None = None,
     axioms: list[Box] | None = None,
     file: str | Path | TextIO | None = None,
+    format: WriteFormat | None = None,
+    rdf_format: str | None = None,
 ) -> None:
-    """Print an ontology serialized as functional OWL."""
+    """Write an ontology serialized as functional OWL."""
     ontology = Ontology(
         iri=iri,
         version_iri=version_iri,
@@ -47,7 +51,14 @@ def write_ontology(
         axioms=axioms,
     )
     document = Document(ontology, prefixes)
-    safe_write_text(document.to_funowl() + "\n", file or sys.stdout)
+    if file is None:
+        file = sys.stdout
+    if format is None or format == "ofn":
+        document.write_funowl(file)
+    elif format == "rdf":
+        document.write_rdf(file, format=rdf_format)
+    else:
+        raise ValueError(f"Unknown format: {format}")
 
 
 def _handle_prefixes(prefixes: PrefixHint) -> list[Prefix]:
@@ -95,11 +106,10 @@ class Document:
         """Get a simple dictionary representation of prefixes."""
         return {prefix.prefix: prefix.uri_prefix for prefix in self.prefixes}
 
-    def write_rdf(self, path: str | Path) -> None:
+    def write_rdf(self, path: str | Path | TextIO, *, format: str | None = None) -> None:
         """Write RDF to a file."""
-        path = Path(path).expanduser().resolve()
         graph = self.to_rdf()
-        graph.serialize(path, format="ttl")
+        write_rdflib(graph, path, format=format)
 
     def to_rdf(self) -> Graph:
         """Get an RDFlib graph representing the ontology."""
