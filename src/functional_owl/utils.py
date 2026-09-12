@@ -9,11 +9,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import curies
     import rdflib
+    from lxml import etree
 
 __all__ = [
     "EXAMPLE_PREFIX_MAP",
     "FunctionalOWLSerializable",
     "RDFNodeSerializable",
+    "XMLSerializable",
     "get_rdf_graph",
     "list_to_funowl",
 ]
@@ -69,6 +71,14 @@ class RDFNodeSerializable(ABC):
     def to_ttl(self, prefix_map: dict[str, str], *, output_prefixes: bool = False) -> str:
         """Output terse Turtle statements."""
         return serialize_turtle([self], output_prefixes=output_prefixes, prefix_map=prefix_map)
+
+
+class XMLSerializable(ABC):
+    """An object that can be serialized to XML."""
+
+    @abstractmethod
+    def to_xml(self, converter: curies.Converter, nsmap: dict[str, str]) -> etree.Element:
+        """Make XML."""
 
 
 EXAMPLE_ONTOLOGY_IRI = "https://example.org/example.ofn"

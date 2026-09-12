@@ -11,6 +11,7 @@ from typing import Literal, TextIO, TypeAlias
 
 import curies
 from curies import Converter
+from lxml import etree
 from pystow.utils import safe_write_text, write_rdflib
 from rdflib import OWL, RDF, Graph, term
 
@@ -27,7 +28,7 @@ __all__ = [
 
 PrefixHint: TypeAlias = dict[str, str] | list["Prefix"] | curies.Converter
 
-WriteFormat: TypeAlias = Literal["ofn", "rdf"]
+WriteFormat: TypeAlias = Literal["ofn", "rdf", "xml"]
 
 
 def write_ontology(
@@ -57,6 +58,8 @@ def write_ontology(
         document.write_funowl(file)
     elif format == "rdf":
         document.write_rdf(file, format=rdf_format)
+    elif format == "xml":
+        document.write_xml(file)
     else:
         raise ValueError(f"Unknown format: {format}")
 
@@ -132,6 +135,21 @@ class Document:
         prefixes = list_to_funowl(self.prefixes, sep="\n")
         ontologies = list_to_funowl(self.ontologies, sep="\n\n")
         return prefixes + "\n\n" + ontologies
+
+    def write_xml(self, path: str | Path | TextIO) -> None:
+        """Write RDF/XML to a file."""
+        element = self.to_xml()
+        s = etree.tostring(element, encoding="utf-8", pretty_print=True).decode("utf-8")
+        safe_write_text(s, path)
+
+    def to_xml(self) -> etree.Element:
+        """Get the document as OWL/XML."""
+        if len(self.ontologies) != 1:
+            raise ValueError
+        return self.ontologies[0].to_xml(
+            Converter.from_prefix_map(self.prefix_map),
+            self.prefix_map,
+        )
 
 
 class Ontology(Box):
@@ -230,6 +248,17 @@ class Ontology(Box):
         )
         return rv
 
+    def to_xml(self, converter: Converter, nsmap: dict[str | None, str]) -> etree.Element:
+        """Get an XML element tree."""
+        root = etree.Element("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF", nsmap={None: self.iri + "#", **nsmap})
+        root.set("{http://www.w3.org/XML/1998/namespace}base", self.iri)
+        ontology = etree.Element("{http://www.w3.org/2002/07/owl#}Ontology", nsmap=nsmap)
+        ontology.set("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about", self.iri)
+        root.append(ontology)
+        for axiom in self.axioms:
+            root.append(axiom.to_xml(converter, nsmap))
+        return root
+
 
 class Prefix(Box):
     """A model for imports, as defined by `3.7 "Functional-Style Syntax" <https://www.w3.org/TR/owl2-syntax/#Functional-Style_Syntax>`_."""
@@ -247,6 +276,9 @@ class Prefix(Box):
     def to_funowl_args(self) -> str:
         """Get the inside of the functional OWL tag representing the prefix."""
         return f"{self.prefix}:=<{self.uri_prefix}>"
+
+    def to_xml(self) -> etree.Element:
+        raise NotImplementedError
 
 
 class Import(Box):
