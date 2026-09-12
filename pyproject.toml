@@ -58,7 +58,7 @@ requires-python = ">=3.10"
 dependencies = [
     "curies>=0.14.5",
     "rdflib",
-    "pystow>=0.8.15",
+    "pystow>=0.9.4",
 ]
 
 # see https://peps.python.org/pep-0735/ and https://docs.astral.sh/uv/concepts/dependencies/#dependency-groups
