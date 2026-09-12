@@ -11,6 +11,7 @@ from typing import Literal, TextIO, TypeAlias
 
 import curies
 from curies import Converter
+from lxml import etree
 from pystow.utils import safe_write_text, write_rdflib
 from rdflib import OWL, RDF, Graph, term
 
@@ -57,6 +58,8 @@ def write_ontology(
         document.write_funowl(file)
     elif format == "rdf":
         document.write_rdf(file, format=rdf_format)
+    elif format == "xml":
+        document.write_xml(file)
     else:
         raise ValueError(f"Unknown format: {format}")
 
@@ -132,6 +135,18 @@ class Document:
         prefixes = list_to_funowl(self.prefixes, sep="\n")
         ontologies = list_to_funowl(self.ontologies, sep="\n\n")
         return prefixes + "\n\n" + ontologies
+
+    def write_xml(self, path: str | Path | TextIO) -> None:
+        """Write RDF/XML to a file."""
+        element = self.to_xml()
+        s = etree.tostring(element)
+        safe_write_text(s, path)
+
+    def to_xml(self) -> etree.Element:
+        """Get the document as OWL/XML."""
+        if len(self.ontologies) != 1:
+            raise ValueError
+        return self.ontologies[0].to_xml()
 
 
 class Ontology(Box):
@@ -229,6 +244,13 @@ class Ontology(Box):
             list_to_funowl(part, sep=f"\n{self._leading}") for part in parts
         )
         return rv
+
+    def to_xml(self) -> etree.Element:
+        """Get an XML element tree."""
+        root = etree.Element("rdf:RDF")
+        ontology = etree.Element("owl:Ontology")
+        root.append(ontology)
+        return root
 
 
 class Prefix(Box):
