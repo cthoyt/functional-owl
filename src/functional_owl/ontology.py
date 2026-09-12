@@ -11,7 +11,6 @@ from typing import Literal, TextIO, TypeAlias
 
 import curies
 from curies import Converter
-from lxml import etree
 from pystow.utils import safe_open, safe_write_text
 from rdflib import OWL, RDF, Graph, term
 
