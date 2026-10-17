@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
+    "DEFAULT_PREFIX_MAP",
     "EXAMPLE_PREFIX_MAP",
     "FunctionalOWLSerializable",
     "RDFNodeSerializable",
