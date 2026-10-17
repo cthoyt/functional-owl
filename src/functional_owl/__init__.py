@@ -94,8 +94,10 @@ from .macros import (
     XrefMacro,
 )
 from .ontology import Document, Import, Ontology, Prefix, write_ontology
+from .utils import DEFAULT_PREFIX_MAP
 
 __all__ = [
+    "DEFAULT_PREFIX_MAP",
     "AltMacro",
     "Annotation",
     "AnnotationAssertion",
