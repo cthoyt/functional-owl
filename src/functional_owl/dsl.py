@@ -14,6 +14,7 @@ import curies
 import rdflib.namespace
 from curies import Converter
 from curies.vocabulary import XSDPrimitive
+from lxml import etree
 from pydantic import AnyUrl
 from rdflib import OWL, RDF, RDFS, XSD, Graph, collection, term
 
@@ -164,13 +165,16 @@ class IdentifierBox(Box):
             return self.identifier == other.identifier
         return False
 
-    def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.Node:
-        """Construct a RDF-appropriate representation."""
+    def to_uri(self, converter: Converter) -> str:
         if isinstance(self.identifier, term.URIRef):
             return self.identifier
         # TODO make more efficient
         iri = converter.expand(self.identifier.curie, strict=True)
-        return term.URIRef(iri)
+        return iri
+
+    def to_rdflib_node(self, graph: Graph, converter: Converter) -> term.Node:
+        """Construct a RDF-appropriate representation."""
+        return term.URIRef(self.to_uri(converter))
 
     def to_funowl(self) -> str:
         """Represent this identifier for functional OWL."""
@@ -183,6 +187,9 @@ class IdentifierBox(Box):
     def to_funowl_args(self) -> str:  # pragma: no cover
         """Get the inside of the functional OWL tag representing the identifier (unused)."""
         raise RuntimeError
+
+    def to_xml(self, converter: curies.Converter, nsmap: dict[str, str]) -> etree.Element:
+        return etree.Element("identifierbox")
 
 
 # TODO upstream into :mod:`curies`
@@ -367,6 +374,17 @@ class Declaration(Box):
     def to_funowl_args(self) -> str:
         """Get the inside of the functional OWL tag representing the declaration."""
         return f"{self.type}({self.node.to_funowl()})"
+
+    def to_xml(self, converter: curies.Converter, nsmap: dict[str, str]) -> etree.Element:
+        uri = self.node.to_uri(converter)
+        match self.type:
+            case "Class":
+                tag = "{http://www.w3.org/2002/07/owl#}Class"
+            case _:
+                raise NotImplementedError(self.type)
+        rv = etree.Element(tag)
+        rv.set("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about", uri)
+        return rv
 
 
 """Section 6: Property Expressions"""
@@ -694,6 +712,9 @@ class SimpleClassExpression(IdentifierBox, ClassExpression):
             return node
         graph.add((node, RDF.type, OWL.Class))
         return node
+
+    def to_xml(self, converter: curies.Converter, nsmap) -> etree.Element:
+        raise NotImplementedError
 
 
 class _ObjectList(ClassExpression):
@@ -1340,6 +1361,9 @@ class SubClassOf(ClassAxiom):
 
     def _funowl_inside_2(self) -> str:
         return f"{self.child.to_funowl()} {self.parent.to_funowl()}"
+
+    def to_xml(self, converter: curies.Converter, nsmap: dict[str, str]) -> etree.Element:
+        return etree.Element("something", nsmap=nsmap)
 
 
 class EquivalentClasses(ClassAxiom):
